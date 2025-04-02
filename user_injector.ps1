@@ -3,7 +3,7 @@ Import-Module ActiveDirectory
 
 # Configuration
 $Domain = "rhoaias.local"
-$AdminsCsvPath = "C:\user_injector_ad-main\admins.csv"
+$AdminsCsvPath = "C:\user_injector_ad-main\admin.csv"
 $UsersCsvPath = "C:\user_injector_ad-main\users.csv"
 
 # Chemins des OUs avec hiérarchie CORE > HUMANS
