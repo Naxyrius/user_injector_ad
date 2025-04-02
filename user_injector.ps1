@@ -5,8 +5,10 @@ Import-Module ActiveDirectory
 $Domain = "rhoaias.local"
 $AdminsCsvPath = "C:\user_injector_ad-main\admins.csv"
 $UsersCsvPath = "C:\user_injector_ad-main\users.csv"
-$AdminsOU = "OU=ADMINS,DC=rhoaias,DC=local"
-$UsersOU = "OU=User,DC=rhoaias,DC=local"  # Modification : OU=User
+
+# Chemins des OUs avec hiérarchie CORE > HUMANS
+$AdminsOU = "OU=ADMINS,OU=HUMANS,OU=CORE,DC=rhoaias,DC=local"
+$UsersOU = "OU=USERS,OU=HUMANS,OU=CORE,DC=rhoaias,DC=local"
 
 # Fonction pour créer des utilisateurs dans une OU spécifique
 function New-ADUserFromCSV {
@@ -51,9 +53,9 @@ function New-ADUserFromCSV {
     }
 }
 
-# Exécution principale : Création des utilisateurs dans les OUs correspondantes
-Write-Host "Création des utilisateurs dans l'OU ADMINS..." -ForegroundColor Cyan
+# Exécution principale : Création des utilisateurs dans les OUs imbriquées
+Write-Host "Création des administrateurs dans CORE > HUMANS > ADMINS..." -ForegroundColor Cyan
 New-ADUserFromCSV -CsvPath $AdminsCsvPath -TargetOU $AdminsOU
 
-Write-Host "Création des utilisateurs dans l'OU User..." -ForegroundColor Cyan
+Write-Host "Création des utilisateurs dans CORE > HUMANS > USERS..." -ForegroundColor Cyan
 New-ADUserFromCSV -CsvPath $UsersCsvPath -TargetOU $UsersOU
