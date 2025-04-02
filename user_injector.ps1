@@ -1,12 +1,12 @@
 # Importer le module Active Directory
 Import-Module ActiveDirectory
 
-# Déclaration des variables
-$Domain = "rhoaias.local"                       # Domaine AD
-$AdminsCsvPath = "C:\user_injector_ad-main\admins.csv"    # Chemin du fichier CSV pour les ADMINS
-$UsersCsvPath = "C:\user_injector_ad-main\users.csv"      # Chemin du fichier CSV pour les Users
-$AdminsOU = "OU=ADMINS,DC=rhoaias,DC=local"     # Chemin LDAP de l'OU ADMINS
-$UsersOU = "OU=Users,DC=rhoaias,DC=local"       # Chemin LDAP de l'OU Users
+# Configuration
+$Domain = "rhoaias.local"
+$AdminsCsvPath = "C:\user_injector_ad-main\admins.csv"
+$UsersCsvPath = "C:\user_injector_ad-main\users.csv"
+$AdminsOU = "OU=ADMINS,DC=rhoaias,DC=local"
+$UsersOU = "OU=User,DC=rhoaias,DC=local"  # Modification : OU=User
 
 # Fonction pour créer des utilisateurs dans une OU spécifique
 function New-ADUserFromCSV {
@@ -15,34 +15,33 @@ function New-ADUserFromCSV {
         [string]$TargetOU
     )
 
-    # Importer les données du fichier CSV
     $Users = Import-Csv -Path $CsvPath -Encoding UTF8
 
     foreach ($User in $Users) {
         try {
-            # Génération des identifiants utilisateur
             $SamAccountName = ($User.first_name.Substring(0,1) + $User.last_name).ToLower()
             $UPN = "$SamAccountName@$Domain"
             $DisplayName = "$($User.first_name) $($User.last_name)"
 
-            # Vérification de l'existence de l'utilisateur dans AD
+            # Vérifier l'existence de l'OU
+            if (-not (Get-ADOrganizationalUnit -Filter "DistinguishedName -eq '$TargetOU'" -ErrorAction SilentlyContinue)) {
+                throw "L'OU $TargetOU n'existe pas"
+            }
+
             if (Get-ADUser -Filter "SamAccountName -eq '$SamAccountName'" -ErrorAction SilentlyContinue) {
                 Write-Host "[SKIP] L'utilisateur $SamAccountName existe déjà." -ForegroundColor Yellow
                 continue
             }
 
-            # Création de l'utilisateur dans AD
             New-ADUser -SamAccountName $SamAccountName `
                        -UserPrincipalName $UPN `
+                       -Name $DisplayName `
                        -GivenName $User.first_name `
                        -Surname $User.last_name `
-                       -DisplayName $DisplayName `
-                       -Name $DisplayName `
                        -AccountPassword (ConvertTo-SecureString $User.Password -AsPlainText -Force) `
                        -Enabled $true `
                        -Path $TargetOU `
-                       -ChangePasswordAtLogon $true `
-                       -PassThru | Out-Null
+                       -ChangePasswordAtLogon $true
 
             Write-Host "[OK] Utilisateur $DisplayName créé dans l'OU $TargetOU." -ForegroundColor Green
         }
@@ -56,5 +55,5 @@ function New-ADUserFromCSV {
 Write-Host "Création des utilisateurs dans l'OU ADMINS..." -ForegroundColor Cyan
 New-ADUserFromCSV -CsvPath $AdminsCsvPath -TargetOU $AdminsOU
 
-Write-Host "Création des utilisateurs dans l'OU Users..." -ForegroundColor Cyan
+Write-Host "Création des utilisateurs dans l'OU User..." -ForegroundColor Cyan
 New-ADUserFromCSV -CsvPath $UsersCsvPath -TargetOU $UsersOU
