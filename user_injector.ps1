@@ -3,8 +3,8 @@ Import-Module ActiveDirectory
 
 # Déclaration des variables
 $Domain = "rhoaias.local"                       # Domaine AD
-$AdminsCsvPath = "C:\admin.csv"    # Chemin du fichier CSV pour les ADMINS
-$UsersCsvPath = "C:\users.csv"      # Chemin du fichier CSV pour les Users
+$AdminsCsvPath = "C:\user_injector_ad-main\admins.csv"    # Chemin du fichier CSV pour les ADMINS
+$UsersCsvPath = "C:\user_injector_ad-main\users.csv"      # Chemin du fichier CSV pour les Users
 $AdminsOU = "OU=ADMINS,DC=rhoaias,DC=local"     # Chemin LDAP de l'OU ADMINS
 $UsersOU = "OU=Users,DC=rhoaias,DC=local"       # Chemin LDAP de l'OU Users
 
@@ -37,6 +37,7 @@ function New-ADUserFromCSV {
                        -GivenName $User.first_name `
                        -Surname $User.last_name `
                        -DisplayName $DisplayName `
+                       -Name $DisplayName `
                        -AccountPassword (ConvertTo-SecureString $User.Password -AsPlainText -Force) `
                        -Enabled $true `
                        -Path $TargetOU `
